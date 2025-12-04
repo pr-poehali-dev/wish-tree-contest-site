@@ -64,7 +64,7 @@ export default function ChristmasTree({
                 }}
               />
               <div
-                className="absolute -top-8 left-1/2 -translate-x-1/2 text-6xl animate-pulse z-50"
+                className="absolute -top-8 left-1/2 -translate-x-1/2 text-6xl animate-pulse z-50 px-0 rounded-0 mx-0 bg-transparent"
                 style={{
                   textShadow: '0 0 30px #FFD700, 0 0 50px #FFA500',
                   filter: 'drop-shadow(0 0 10px rgba(255, 215, 0, 0.8))',
