@@ -47,6 +47,8 @@ export default function Index() {
   const [filterCategory, setFilterCategory] = useState<string>('Все');
   const [adminPassword, setAdminPassword] = useState('');
   const [fulfillData, setFulfillData] = useState({ name: '', contact: '' });
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [clickCount, setClickCount] = useState(0);
   const { toast } = useToast();
   
   const [newWish, setNewWish] = useState({
@@ -228,7 +230,20 @@ export default function Index() {
       </div>
 
       <div className="relative z-10 text-center pt-12 pb-8">
-        <h1 className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] animate-fade-in mb-2">
+        <h1 
+          className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] animate-fade-in mb-2 cursor-default select-none"
+          onClick={() => {
+            const newCount = clickCount + 1;
+            setClickCount(newCount);
+            if (newCount === 5) {
+              setIsAdmin(true);
+              toast({
+                title: 'Режим администратора',
+                description: 'Кнопка добавления желаний активирована',
+              });
+            }
+          }}
+        >
           Ёлка Желаний
         </h1>
         <p className="text-white/80 text-lg">
@@ -251,13 +266,15 @@ export default function Index() {
           </SelectContent>
         </Select>
 
-        <Button
-          onClick={() => setShowAddForm(true)}
-          className="bg-gradient-to-r from-[#9b87f5] to-[#7E69AB] hover:from-[#8b77e5] hover:to-[#6E59A5] text-white"
-        >
-          <Icon name="Plus" size={20} className="mr-2" />
-          Добавить желание
-        </Button>
+        {isAdmin && (
+          <Button
+            onClick={() => setShowAddForm(true)}
+            className="bg-gradient-to-r from-[#9b87f5] to-[#7E69AB] hover:from-[#8b77e5] hover:to-[#6E59A5] text-white"
+          >
+            <Icon name="Plus" size={20} className="mr-2" />
+            Добавить желание
+          </Button>
+        )}
       </div>
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 pb-20">
