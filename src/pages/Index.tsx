@@ -1,15 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
+import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Select,
@@ -27,63 +29,26 @@ interface Wish {
   category: string;
   position: { x: number; y: number };
   color: string;
+  status?: string;
+  fulfilledBy?: string;
 }
 
 const CATEGORIES = ['Игрушки', 'Книги', 'Спорт', 'Творчество', 'Мечта'];
 const COLORS = ['#FFD700', '#FF6B9D', '#4ECDC4', '#95E1D3', '#F38181', '#AA96DA'];
+const API_URL = 'https://functions.poehali.dev/8990a62f-83d1-4f33-88e1-fa8fcffaea2a';
 
 export default function Index() {
-  const [wishes, setWishes] = useState<Wish[]>([
-    {
-      id: 1,
-      childName: 'Маша',
-      age: 7,
-      wish: 'Хочу большую куклу и набор для рисования',
-      category: 'Игрушки',
-      position: { x: 45, y: 25 },
-      color: '#FFD700',
-    },
-    {
-      id: 2,
-      childName: 'Петя',
-      age: 9,
-      wish: 'Мечтаю о роботе-трансформере и энциклопедии про космос',
-      category: 'Игрушки',
-      position: { x: 30, y: 40 },
-      color: '#4ECDC4',
-    },
-    {
-      id: 3,
-      childName: 'Лена',
-      age: 6,
-      wish: 'Хочу пушистого плюшевого мишку и книжку сказок',
-      category: 'Игрушки',
-      position: { x: 60, y: 35 },
-      color: '#FF6B9D',
-    },
-    {
-      id: 4,
-      childName: 'Саша',
-      age: 8,
-      wish: 'Мечтаю о футбольном мяче и форме любимой команды',
-      category: 'Спорт',
-      position: { x: 25, y: 55 },
-      color: '#95E1D3',
-    },
-    {
-      id: 5,
-      childName: 'Катя',
-      age: 10,
-      wish: 'Хочу набор для создания украшений и альбом для скетчей',
-      category: 'Творчество',
-      position: { x: 55, y: 50 },
-      color: '#F38181',
-    },
-  ]);
-
+  const [wishes, setWishes] = useState<Wish[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedWish, setSelectedWish] = useState<Wish | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [showFulfillDialog, setShowFulfillDialog] = useState(false);
   const [filterCategory, setFilterCategory] = useState<string>('Все');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [fulfillData, setFulfillData] = useState({ name: '', contact: '' });
+  const { toast } = useToast();
+  
   const [newWish, setNewWish] = useState({
     childName: '',
     age: '',
@@ -91,10 +56,38 @@ export default function Index() {
     category: 'Игрушки',
   });
 
-  const handleAddWish = () => {
-    if (newWish.childName && newWish.age && newWish.wish) {
-      const wish: Wish = {
-        id: Date.now(),
+  useEffect(() => {
+    loadWishes();
+  }, []);
+
+  const loadWishes = async () => {
+    try {
+      const response = await fetch(API_URL);
+      const data = await response.json();
+      setWishes(data.wishes || []);
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось загрузить желания',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddWish = async () => {
+    if (!newWish.childName || !newWish.age || !newWish.wish) {
+      toast({
+        title: 'Ошибка',
+        description: 'Заполните все поля',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const wishData = {
         childName: newWish.childName,
         age: parseInt(newWish.age),
         wish: newWish.wish,
@@ -105,9 +98,100 @@ export default function Index() {
         },
         color: COLORS[Math.floor(Math.random() * COLORS.length)],
       };
-      setWishes([...wishes, wish]);
+
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Password': adminPassword,
+        },
+        body: JSON.stringify(wishData),
+      });
+
+      if (response.status === 403) {
+        toast({
+          title: 'Ошибка',
+          description: 'Неверный пароль администратора',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error('Ошибка при добавлении желания');
+      }
+
+      toast({
+        title: 'Успех!',
+        description: 'Желание добавлено на ёлку',
+      });
+
       setNewWish({ childName: '', age: '', wish: '', category: 'Игрушки' });
+      setAdminPassword('');
+      setShowPasswordDialog(false);
       setShowAddForm(false);
+      loadWishes();
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось добавить желание',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleFulfillWish = async () => {
+    if (!fulfillData.name || !fulfillData.contact) {
+      toast({
+        title: 'Ошибка',
+        description: 'Укажите ваше имя и контакт',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(API_URL, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: selectedWish?.id,
+          action: 'fulfill',
+          fulfilledBy: fulfillData.name,
+          contact: fulfillData.contact,
+        }),
+      });
+
+      if (response.status === 409) {
+        toast({
+          title: 'Упс!',
+          description: 'Это желание уже забронировано кем-то другим',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error('Ошибка при бронировании');
+      }
+
+      toast({
+        title: 'Спасибо! ❤️',
+        description: 'Вы выбрали желание для исполнения. Скоро с вами свяжутся!',
+      });
+
+      setFulfillData({ name: '', contact: '' });
+      setShowFulfillDialog(false);
+      setSelectedWish(null);
+      loadWishes();
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось забронировать желание',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -115,6 +199,16 @@ export default function Index() {
     filterCategory === 'Все'
       ? wishes
       : wishes.filter((w) => w.category === filterCategory);
+
+  const availableWishes = filteredWishes.filter((w) => w.status === 'available');
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#0a0e27] via-[#1a1f3a] to-[#2a2f4a] flex items-center justify-center">
+        <div className="text-white text-2xl">Загрузка... ✨</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a0e27] via-[#1a1f3a] to-[#2a2f4a] overflow-hidden relative">
@@ -201,7 +295,7 @@ export default function Index() {
             </div>
           </div>
 
-          {filteredWishes.map((wish) => (
+          {availableWishes.map((wish) => (
             <button
               key={wish.id}
               onClick={() => setSelectedWish(wish)}
@@ -222,11 +316,14 @@ export default function Index() {
           ))}
         </div>
 
-        <div className="text-center mt-8">
+        <div className="text-center mt-8 space-y-2">
           <Badge className="bg-white/10 text-white border-white/20 text-lg px-6 py-2">
             <Icon name="Gift" size={20} className="mr-2" />
-            Всего желаний: {filteredWishes.length}
+            Доступно желаний: {availableWishes.length}
           </Badge>
+          <div className="text-white/60 text-sm">
+            Исполнено: {wishes.filter((w) => w.status === 'fulfilled').length}
+          </div>
         </div>
       </div>
 
@@ -251,13 +348,16 @@ export default function Index() {
               <Card className="p-6 bg-white/5 border-white/10">
                 <p className="text-lg leading-relaxed">{selectedWish.wish}</p>
               </Card>
-              <div className="flex justify-center pt-4">
-                <Icon
-                  name="Heart"
-                  size={32}
-                  className="text-[#FF6B9D] animate-pulse"
-                />
-              </div>
+              <Button
+                onClick={() => {
+                  setShowFulfillDialog(true);
+                  setSelectedWish(selectedWish);
+                }}
+                className="w-full bg-gradient-to-r from-[#FF6B9D] to-[#F38181] hover:from-[#FF5B8D] hover:to-[#E37171] text-white"
+              >
+                <Icon name="Heart" size={20} className="mr-2" />
+                Я хочу исполнить это желание!
+              </Button>
             </div>
           )}
         </DialogContent>
@@ -335,11 +435,94 @@ export default function Index() {
               />
             </div>
             <Button
-              onClick={handleAddWish}
+              onClick={() => setShowPasswordDialog(true)}
               className="w-full bg-gradient-to-r from-[#9b87f5] to-[#7E69AB] hover:from-[#8b77e5] hover:to-[#6E59A5] text-white"
             >
               <Icon name="Sparkles" size={20} className="mr-2" />
+              Далее
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+        <DialogContent className="bg-gradient-to-br from-[#2a2f4a] to-[#1a1f3a] border-[#9b87f5]/30 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-2xl text-[#FFD700] flex items-center gap-2">
+              <Icon name="Lock" size={24} />
+              Пароль администратора
+            </DialogTitle>
+            <DialogDescription className="text-white/60">
+              Введите пароль для добавления желания на ёлку
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              type="password"
+              value={adminPassword}
+              onChange={(e) => setAdminPassword(e.target.value)}
+              placeholder="Введите пароль"
+              className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleAddWish();
+                }
+              }}
+            />
+            <Button
+              onClick={handleAddWish}
+              className="w-full bg-gradient-to-r from-[#9b87f5] to-[#7E69AB] hover:from-[#8b77e5] hover:to-[#6E59A5] text-white"
+            >
               Повесить шарик на ёлку
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showFulfillDialog} onOpenChange={setShowFulfillDialog}>
+        <DialogContent className="bg-gradient-to-br from-[#2a2f4a] to-[#1a1f3a] border-[#9b87f5]/30 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-2xl text-[#FFD700] flex items-center gap-2">
+              <Icon name="Heart" size={24} />
+              Исполнить желание
+            </DialogTitle>
+            <DialogDescription className="text-white/60">
+              Укажите ваши контакты, чтобы мы могли связаться с вами
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm text-white/70 mb-2 block">
+                Ваше имя
+              </label>
+              <Input
+                value={fulfillData.name}
+                onChange={(e) =>
+                  setFulfillData({ ...fulfillData, name: e.target.value })
+                }
+                placeholder="Как к вам обращаться?"
+                className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-white/70 mb-2 block">
+                Контакт (телефон или email)
+              </label>
+              <Input
+                value={fulfillData.contact}
+                onChange={(e) =>
+                  setFulfillData({ ...fulfillData, contact: e.target.value })
+                }
+                placeholder="+7 или email"
+                className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+              />
+            </div>
+            <Button
+              onClick={handleFulfillWish}
+              className="w-full bg-gradient-to-r from-[#FF6B9D] to-[#F38181] hover:from-[#FF5B8D] hover:to-[#E37171] text-white"
+            >
+              <Icon name="Sparkles" size={20} className="mr-2" />
+              Подтвердить
             </Button>
           </div>
         </DialogContent>
