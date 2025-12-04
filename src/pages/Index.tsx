@@ -418,7 +418,14 @@ export default function Index() {
               <div className="absolute left-1/2 top-0 -translate-x-1/2">
                 <div className="relative">
                   <div
-                    className="absolute -top-8 left-1/2 -translate-x-1/2 text-6xl animate-pulse"
+                    className="w-0 h-0 border-l-[200px] border-r-[200px] border-b-[500px] border-l-transparent border-r-transparent"
+                    style={{
+                      borderBottomColor: '#2d5016',
+                      filter: 'drop-shadow(0 0 20px rgba(157, 255, 0, 0.3))',
+                    }}
+                  />
+                  <div
+                    className="absolute -top-8 left-1/2 -translate-x-1/2 text-6xl animate-pulse z-50"
                     style={{
                       textShadow: '0 0 30px #FFD700, 0 0 50px #FFA500',
                       filter: 'drop-shadow(0 0 10px rgba(255, 215, 0, 0.8))',
@@ -426,13 +433,6 @@ export default function Index() {
                   >
                     ⭐
                   </div>
-                  <div
-                    className="w-0 h-0 border-l-[200px] border-r-[200px] border-b-[500px] border-l-transparent border-r-transparent"
-                    style={{
-                      borderBottomColor: '#2d5016',
-                      filter: 'drop-shadow(0 0 20px rgba(157, 255, 0, 0.3))',
-                    }}
-                  />
                   {[...Array(20)].map((_, i) => (
                     <div
                       key={i}
@@ -451,11 +451,12 @@ export default function Index() {
 
               {currentWishes.map((wish, index) => {
                 const pos = predefinedPositions[index] || { x: 50, y: 50 };
+                const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)];
                 return (
                   <button
                     key={wish.id}
                     onClick={() => setSelectedWish(wish)}
-                    className="absolute transform -translate-x-1/2 -translate-y-1/2 group cursor-pointer"
+                    className="absolute transform -translate-x-1/2 -translate-y-1/2 group cursor-pointer z-20"
                     style={{
                       left: `${pos.x}%`,
                       top: `${pos.y}%`,
@@ -465,8 +466,8 @@ export default function Index() {
                       <div
                         className="w-12 h-12 rounded-full shadow-2xl transition-all duration-300 group-hover:scale-125 group-hover:shadow-[0_0_30px_rgba(255,255,255,0.8)] animate-[float_3s_ease-in-out_infinite]"
                         style={{
-                          backgroundColor: wish.color,
-                          boxShadow: `0 0 20px ${wish.color}`,
+                          backgroundColor: randomColor,
+                          boxShadow: `0 0 20px ${randomColor}`,
                           animationDelay: `${index * 0.2}s`,
                         }}
                       />
@@ -476,7 +477,7 @@ export default function Index() {
                       <Badge
                         className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs"
                         style={{
-                          backgroundColor: wish.color,
+                          backgroundColor: randomColor,
                           color: '#000',
                         }}
                       >
