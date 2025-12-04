@@ -299,14 +299,14 @@ export default function Index() {
   );
 
   const predefinedPositions = [
-    { x: 30, y: 25 },
-    { x: 70, y: 25 },
-    { x: 20, y: 45 },
-    { x: 50, y: 45 },
-    { x: 80, y: 45 },
-    { x: 25, y: 65 },
-    { x: 55, y: 65 },
-    { x: 75, y: 65 },
+    { x: 50, y: 18 },
+    { x: 38, y: 32 },
+    { x: 62, y: 32 },
+    { x: 30, y: 48 },
+    { x: 50, y: 48 },
+    { x: 70, y: 48 },
+    { x: 25, y: 68 },
+    { x: 75, y: 68 },
   ];
 
   if (loading) {
@@ -418,13 +418,22 @@ export default function Index() {
               <div className="absolute left-1/2 top-0 -translate-x-1/2">
                 <div className="relative">
                   <div
+                    className="absolute -top-8 left-1/2 -translate-x-1/2 text-6xl animate-pulse"
+                    style={{
+                      textShadow: '0 0 30px #FFD700, 0 0 50px #FFA500',
+                      filter: 'drop-shadow(0 0 10px rgba(255, 215, 0, 0.8))',
+                    }}
+                  >
+                    ⭐
+                  </div>
+                  <div
                     className="w-0 h-0 border-l-[200px] border-r-[200px] border-b-[500px] border-l-transparent border-r-transparent"
                     style={{
                       borderBottomColor: '#2d5016',
                       filter: 'drop-shadow(0 0 20px rgba(157, 255, 0, 0.3))',
                     }}
                   />
-                  {[...Array(15)].map((_, i) => (
+                  {[...Array(20)].map((_, i) => (
                     <div
                       key={i}
                       className="absolute w-2 h-2 rounded-full animate-pulse"
