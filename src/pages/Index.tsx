@@ -313,7 +313,7 @@ export default function Index() {
             }
           }}
         >
-          Ёлка Желаний
+          Ёлка желаний
         </h1>
         <p className="text-white/80 text-lg">
           Нажми на шарик, чтобы узнать желание ребёнка ✨

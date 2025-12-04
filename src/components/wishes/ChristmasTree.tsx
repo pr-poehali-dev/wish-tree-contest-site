@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { Wish, COLORS } from './types';
 
@@ -14,14 +13,14 @@ interface ChristmasTreeProps {
 }
 
 const predefinedPositions = [
-  { x: 50, y: 18 },
-  { x: 38, y: 32 },
-  { x: 62, y: 32 },
-  { x: 30, y: 48 },
-  { x: 50, y: 48 },
-  { x: 70, y: 48 },
-  { x: 25, y: 68 },
-  { x: 75, y: 68 },
+  { x: 50, y: 20 },
+  { x: 42, y: 35 },
+  { x: 58, y: 35 },
+  { x: 35, y: 50 },
+  { x: 50, y: 50 },
+  { x: 65, y: 50 },
+  { x: 30, y: 68 },
+  { x: 70, y: 68 },
 ];
 
 export default function ChristmasTree({
@@ -91,7 +90,7 @@ export default function ChristmasTree({
 
           {currentWishes.map((wish, index) => {
             const pos = predefinedPositions[index] || { x: 50, y: 50 };
-            const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+            const uniqueColor = COLORS[index % COLORS.length];
             return (
               <button
                 key={wish.id}
@@ -106,23 +105,14 @@ export default function ChristmasTree({
                   <div
                     className="w-12 h-12 rounded-full shadow-2xl transition-all duration-300 group-hover:scale-125 group-hover:shadow-[0_0_30px_rgba(255,255,255,0.8)] animate-[float_3s_ease-in-out_infinite]"
                     style={{
-                      backgroundColor: randomColor,
-                      boxShadow: `0 0 20px ${randomColor}`,
+                      backgroundColor: uniqueColor,
+                      boxShadow: `0 0 20px ${uniqueColor}`,
                       animationDelay: `${index * 0.2}s`,
                     }}
                   />
                   <div
                     className="absolute -top-2 left-1/2 -translate-x-1/2 w-1 h-4 bg-gradient-to-b from-transparent via-white/50 to-transparent"
                   />
-                  <Badge
-                    className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs"
-                    style={{
-                      backgroundColor: randomColor,
-                      color: '#000',
-                    }}
-                  >
-                    {wish.category}
-                  </Badge>
                 </div>
               </button>
             );
